@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('config');
 const { check, validationResult } = require('express-validator');
-const auth = require('../middleware/auth')
+const auth = require('../middleware/auth');
 const User = require('../models/User');
 
 // @route     GET api/auth
@@ -13,7 +13,7 @@ const User = require('../models/User');
 router.get('/', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
-    res.json(user)
+    res.json(user);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -27,10 +27,9 @@ router.post(
   '/',
   [
     check('email', 'Email is required').isEmail(),
-    check('password', 'Password is required').exists()
+    check('password', 'Password is required').exists(),
   ],
   async (req, res) => {
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -39,20 +38,20 @@ router.post(
     const { email, password } = req.body;
 
     try {
-
       let user = await User.findOne({ email });
 
-      if (!user) return res.status(400).json({ msg: 'Email not found on DB' })
+      if (!user) {
+        return res.status(400).json({ msg: 'Email not found on DB' });
+      }
 
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (!isMatch) return res.status(400).json({ msg: 'Invalid password' });
 
-
       const payload = {
         user: {
-          id: user.id
-        }
+          id: user.id,
+        },
       };
 
       jwt.sign(
@@ -64,14 +63,10 @@ router.post(
           res.json({ token });
         }
       );
-
     } catch (err) {
-      console.error(err.message)
-      res.status(500).json({ msg: 'server error' })
-
+      console.error(err.message);
+      res.status(500).json({ msg: 'server error' });
     }
-
-
   }
 );
 
